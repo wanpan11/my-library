@@ -1,5 +1,6 @@
-import path from "path";
-import { defineConfig, UserConfig } from "vite";
+import type { UserConfig } from "vite";
+import path from "node:path";
+import { defineConfig } from "vite";
 
 export default defineConfig(() => {
   const config: UserConfig = {
