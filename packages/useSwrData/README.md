@@ -13,6 +13,7 @@
   - [特性](#特性)
   - [安装](#安装)
   - [基础使用](#基础使用)
+  - [全局定义错误类型](#全局定义错误类型)
   - [简单模式](#简单模式)
   - [分页功能](#分页功能)
   - [API](#api)
@@ -49,19 +50,33 @@ pnpm add @wanp/use-swr-data
 ## 基础使用
 
 ```typescript
-import useSwrData from "@wanp/use-swr-data";
+  import useSwrData from "@wanp/use-swr-data";
 
-// 基础数据请求
-const { data, error, isLoading, refresh } = useSwrData({
-  reqKey: "unique-key",
-  req: async (params) => {
-    const response = await fetch("your-api-endpoint");
-    return response.json();
-  },
-  params: {
-    /* 可选的请求参数 */
-  },
-});
+  // 基础数据请求
+  const { data, error, isLoading, refresh } = useSwrData({
+    reqKey: "unique-key",
+    req: async (params) => {
+      const response = await fetch("your-api-endpoint");
+      return response.json();
+    },
+    params: {
+      /* 可选的请求参数 */
+    },
+  });
+```
+
+## 全局定义错误类型
+```typescript
+  // 模块扩充 useSwrData.d.ts
+
+  import "@wanp/use-swr-data";
+
+  declare module "@wanp/use-swr-data" {
+    export interface UseSwrDataError {
+      message: string;
+      code?: number;
+    }
+  }
 ```
 
 ## 简单模式

@@ -27,10 +27,12 @@ export interface PagingSwrProps<TData = any, TParams extends AnyObject = any> ex
 }
 
 /* ******************************* result ************************************  */
+export interface UseSwrDataError extends Record<string, any> {}
+
 export interface BaseSwrResult<TData = any> {
   key: import("swr").Key;
   data?: TData;
-  error: any;
+  error?: UseSwrDataError;
   isLoading: boolean;
   refresh: import("swr").KeyedMutator<TData>;
 }

@@ -16,5 +16,5 @@
     "isolatedModules": true,
     "skipLibCheck": true
   },
-  "include": ["./packages/**/*", "vitest.config.ts", "demo"]
+  "exclude": ["node_modules", "dist", "demo"]
 }
