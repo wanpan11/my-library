@@ -84,7 +84,7 @@ function useSwrData<TData = any, TParams extends AnyObject = any>(
     return base;
   }, [simple, swrConfig]);
 
-  const { data, isLoading, error, mutate } = useSwr(
+  const { data, isLoading, isValidating, error, mutate } = useSwr(
     mergeKey,
     async (data: [SimpleKey, TParams]) => {
       return req(data[1]);
@@ -106,6 +106,7 @@ function useSwrData<TData = any, TParams extends AnyObject = any>(
       data,
       error,
       isLoading,
+      isValidating,
       refresh: mutate,
       pageInfo,
       searchInfo,
@@ -120,6 +121,7 @@ function useSwrData<TData = any, TParams extends AnyObject = any>(
       data,
       error,
       isLoading,
+      isValidating,
       refresh: mutate,
     };
   }
