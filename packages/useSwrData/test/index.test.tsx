@@ -1,6 +1,5 @@
 import type { AnyObject, BaseSwrProps, BaseSwrResult, PagingSwrProps, PagingSwrResult } from "../src/interface";
 import { fireEvent, render } from "@testing-library/react";
-
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import useSwrData from "../src/index";
 

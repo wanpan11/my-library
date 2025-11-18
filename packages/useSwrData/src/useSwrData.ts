@@ -71,24 +71,14 @@ function useSwrData<TData = any, TParams extends AnyObject = any>(
   }, [pageInfo, paging, params, ready, reqKey, searchInfo]);
 
   const mergeConf = useMemo(() => {
-    let base: SWRConfiguration = { revalidateOnFocus: false };
-
-    if (swrConfig) {
-      base = swrConfig;
-    }
-
-    if (simple) {
-      base = { ...SIMPLE_CONF, ...base };
-    }
-
-    return base;
+    const defaults: SWRConfiguration = { revalidateOnFocus: false };
+    const base = simple ? { ...defaults, ...SIMPLE_CONF } : defaults;
+    return { ...base, ...(swrConfig || {}) } as SWRConfiguration;
   }, [simple, swrConfig]);
 
   const { data, isLoading, isValidating, error, mutate } = useSwr(
     mergeKey,
-    async (data: [SimpleKey, TParams]) => {
-      return req(data[1]);
-    },
+    useCallback(async (data: [SimpleKey, TParams]) => req(data[1]), [req]),
     mergeConf
   );
 
