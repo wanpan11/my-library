@@ -71,7 +71,7 @@ function useSwrData<TData = any, TParams extends AnyObject = any>(
     return [reqKey, mergeParams];
   }, [pageInfo, paging, params, ready, reqKey, searchInfo]);
 
-  // 合并 SWR 配置 defaults > SIMPLE_CONF > swrConfig
+  // 合并 SWR 配置，优先级: swrConfig > SIMPLE_CONF > defaults
   const mergeConf = useMemo(() => {
     const defaults: SWRConfiguration = { revalidateOnFocus: false };
     const base = simple ? { ...defaults, ...SIMPLE_CONF } : defaults;
