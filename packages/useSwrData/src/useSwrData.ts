@@ -54,6 +54,7 @@ function useSwrData<TData = any, TParams extends AnyObject = any>(
   const [pageInfo, setPage] = useState(defaultPage);
   const [searchInfo, setSearch] = useState<Partial<TParams> | undefined>(defaultSearch);
 
+  // 合并参数的 key
   const mergeKey: Key = useMemo(() => {
     if (ready === false) {
       return null;
@@ -70,6 +71,7 @@ function useSwrData<TData = any, TParams extends AnyObject = any>(
     return [reqKey, mergeParams];
   }, [pageInfo, paging, params, ready, reqKey, searchInfo]);
 
+  // 合并 SWR 配置 defaults > SIMPLE_CONF > swrConfig
   const mergeConf = useMemo(() => {
     const defaults: SWRConfiguration = { revalidateOnFocus: false };
     const base = simple ? { ...defaults, ...SIMPLE_CONF } : defaults;
@@ -90,23 +92,8 @@ function useSwrData<TData = any, TParams extends AnyObject = any>(
     [defaultPage]
   );
 
-  if (paging) {
-    return {
-      key: mergeKey,
-      data,
-      error,
-      isLoading,
-      isValidating,
-      refresh: mutate,
-      pageInfo,
-      searchInfo,
-      onSearch,
-      setPage,
-      setSearch,
-    };
-  }
-  else {
-    return {
+  const result = useMemo(() => {
+    const baseResult = {
       key: mergeKey,
       data,
       error,
@@ -114,7 +101,22 @@ function useSwrData<TData = any, TParams extends AnyObject = any>(
       isValidating,
       refresh: mutate,
     };
-  }
+
+    if (paging) {
+      return {
+        ...baseResult,
+        pageInfo,
+        searchInfo,
+        onSearch,
+        setPage,
+        setSearch,
+      };
+    }
+
+    return baseResult;
+  }, [data, error, isLoading, isValidating, mergeKey, mutate, onSearch, pageInfo, paging, searchInfo]);
+
+  return result;
 }
 
 export { useSwrData };
