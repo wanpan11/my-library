@@ -21,6 +21,7 @@
   ],
   "scripts": {
     "build": "rollup -c",
+    "test": "vitest run",
     "prepublishOnly": "pnpm run build"
   },
   "dependencies": {

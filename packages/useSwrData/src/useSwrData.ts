@@ -54,6 +54,7 @@ function useSwrData<TData = any, TParams extends AnyObject = any>(
   const [pageInfo, setPage] = useState(defaultPage);
   const [searchInfo, setSearch] = useState<Partial<TParams> | undefined>(defaultSearch);
 
+  // 合并参数的 key
   const mergeKey: Key = useMemo(() => {
     if (ready === false) {
       return null;
@@ -70,25 +71,16 @@ function useSwrData<TData = any, TParams extends AnyObject = any>(
     return [reqKey, mergeParams];
   }, [pageInfo, paging, params, ready, reqKey, searchInfo]);
 
+  // 合并 SWR 配置，优先级: swrConfig > SIMPLE_CONF > defaults
   const mergeConf = useMemo(() => {
-    let base: SWRConfiguration = { revalidateOnFocus: false };
-
-    if (swrConfig) {
-      base = swrConfig;
-    }
-
-    if (simple) {
-      base = { ...SIMPLE_CONF, ...base };
-    }
-
-    return base;
+    const defaults: SWRConfiguration = { revalidateOnFocus: false };
+    const base = simple ? { ...defaults, ...SIMPLE_CONF } : defaults;
+    return { ...base, ...(swrConfig || {}) } as SWRConfiguration;
   }, [simple, swrConfig]);
 
-  const { data, isLoading, error, mutate } = useSwr(
+  const { data, isLoading, isValidating, error, mutate } = useSwr(
     mergeKey,
-    async (data: [SimpleKey, TParams]) => {
-      return req(data[1]);
-    },
+    useCallback(async (data: [SimpleKey, TParams]) => req(data[1]), [req]),
     mergeConf
   );
 
@@ -100,29 +92,31 @@ function useSwrData<TData = any, TParams extends AnyObject = any>(
     [defaultPage]
   );
 
-  if (paging) {
-    return {
+  const result = useMemo(() => {
+    const baseResult = {
       key: mergeKey,
       data,
       error,
       isLoading,
-      refresh: mutate,
-      pageInfo,
-      searchInfo,
-      onSearch,
-      setPage,
-      setSearch,
-    };
-  }
-  else {
-    return {
-      key: mergeKey,
-      data,
-      error,
-      isLoading,
+      isValidating,
       refresh: mutate,
     };
-  }
+
+    if (paging) {
+      return {
+        ...baseResult,
+        pageInfo,
+        searchInfo,
+        onSearch,
+        setPage,
+        setSearch,
+      };
+    }
+
+    return baseResult;
+  }, [data, error, isLoading, isValidating, mergeKey, mutate, onSearch, pageInfo, paging, searchInfo]);
+
+  return result;
 }
 
 export { useSwrData };

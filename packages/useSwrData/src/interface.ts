@@ -34,6 +34,7 @@ export interface BaseSwrResult<TData = any> {
   data?: TData;
   error?: UseSwrDataError;
   isLoading: boolean;
+  isValidating: boolean;
   refresh: import("swr").KeyedMutator<TData>;
 }
 export interface PagingSwrResult<TData = any, TParams extends AnyObject = any> extends BaseSwrResult<TData> {
