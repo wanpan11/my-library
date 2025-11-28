@@ -69,15 +69,14 @@ function createContainer<T>(initData: T) {
     const prevDepRef = useRef<any[] | null>(null);
 
     // 更新依赖函数
-    useEffect(() => {
-      depRef.current = setDep;
-    });
+    // eslint-disable-next-line react-hooks/refs
+    depRef.current = setDep;
 
     // 创建观察者
     useEffect(() => {
       const key = nanoid();
 
-      // 初始化依赖值
+      // 首次挂载时，计算并存储初始依赖值
       prevDepRef.current = depRef.current(observableValue.state);
 
       const observer = () => {
@@ -85,7 +84,7 @@ function createContainer<T>(initData: T) {
         const cur = depRef.current(observableValue.state);
 
         // 通过浅比较，来判断依赖是否有变化
-        if (!prev || !shallowEqual(prev, cur)) {
+        if (!shallowEqual(prev, cur)) {
           prevDepRef.current = cur;
           forceUpdate({}); // 触发渲染
         }
