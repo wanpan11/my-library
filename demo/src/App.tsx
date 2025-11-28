@@ -1,3 +1,5 @@
+import StoreTest from "./createContainer";
+
 function App() {
   return (
     <>
@@ -5,9 +7,9 @@ function App() {
       <CacheTest />
       <hr /> */}
 
-      {/* <h1>containerStore</h1>
+      <h1>containerStore</h1>
       <StoreTest />
-      <hr /> */}
+      <hr />
 
       {/* <h1>useSwrData</h1>
       <Demo /> */}
