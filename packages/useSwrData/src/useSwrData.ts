@@ -78,7 +78,7 @@ function useSwrData<TData = any, TParams extends AnyObject = any>(
     return { ...base, ...(swrConfig || {}) } as SWRConfiguration;
   }, [simple, swrConfig]);
 
-  const { data, isLoading, isValidating, error, mutate } = useSwr(
+  const swrData = useSwr(
     mergeKey,
     useCallback(async (data: [SimpleKey, TParams]) => req(data[1]), [req]),
     mergeConf
@@ -95,11 +95,19 @@ function useSwrData<TData = any, TParams extends AnyObject = any>(
   const result = useMemo(() => {
     const baseResult = {
       key: mergeKey,
-      data,
-      error,
-      isLoading,
-      isValidating,
-      refresh: mutate,
+      get data() {
+        return swrData.data;
+      },
+      get error() {
+        return swrData.error;
+      },
+      get isLoading() {
+        return swrData.isLoading;
+      },
+      get isValidating() {
+        return swrData.isValidating;
+      },
+      refresh: swrData.mutate,
     };
 
     if (paging) {
@@ -114,7 +122,7 @@ function useSwrData<TData = any, TParams extends AnyObject = any>(
     }
 
     return baseResult;
-  }, [data, error, isLoading, isValidating, mergeKey, mutate, onSearch, pageInfo, paging, searchInfo]);
+  }, [mergeKey, onSearch, pageInfo, paging, searchInfo, swrData]);
 
   return result;
 }
