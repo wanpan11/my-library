@@ -6,7 +6,7 @@ import { shallowEqual } from "shallow-equal";
 interface Observer<S> {
   state: S;
   setState: React.Dispatch<React.SetStateAction<S>>;
-  readonly observers: { key: string; updater: () => void }[];
+  readonly observers: Map<string, () => void>;
 }
 
 /**
@@ -20,10 +20,10 @@ function createContainer<T>(initData: T) {
     // dispatch 更新 state
     const [state, setState] = useState(initData);
 
-    // 使用 ref 存储最新的 state 和 setState，避免闭包问题
+    // 使用 ref 存储最新的 state 和 setState,避免闭包问题
     const stateRef = useRef(state);
     const setStateRef = useRef(setState);
-    const observersRef = useRef<Observer<T>["observers"]>([]);
+    const observersRef = useRef<Observer<T>["observers"]>(new Map());
 
     // 同步最新值到 ref
     stateRef.current = state;
@@ -47,7 +47,7 @@ function createContainer<T>(initData: T) {
 
     // state 更新时通知观察者组件更新
     useEffect(() => {
-      observersRef.current.forEach(observer => observer.updater());
+      observersRef.current.forEach(updater => updater());
     }, [state]);
 
     return <ObservableContext value={observableValue}>{children}</ObservableContext>;
@@ -83,19 +83,16 @@ function createContainer<T>(initData: T) {
         const prev = prevDepRef.current;
         const cur = depRef.current(observableValue.state);
 
-        // 通过浅比较，来判断依赖是否有变化
+        // 通过浅比较,来判断依赖是否有变化
         if (!shallowEqual(prev, cur)) {
           prevDepRef.current = cur;
           forceUpdate({}); // 触发渲染
         }
       };
-      observableValue.observers.push({ key, updater: observer });
+      observableValue.observers.set(key, observer);
 
       return () => {
-        const idx = observableValue.observers.findIndex(obs => obs.key === key);
-        if (idx !== -1) {
-          observableValue.observers.splice(idx, 1);
-        }
+        observableValue.observers.delete(key);
       };
     }, [observableValue]);
 
