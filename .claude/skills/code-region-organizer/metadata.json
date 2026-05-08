@@ -1,0 +1,6 @@
+{
+  "version": "1.0.0",
+  "organization": "wanp",
+  "date": "May 2026",
+  "abstract": "Enforces structured code region organization with section comments. Ensures code is grouped by functional area with clear separator comments, keeping each section concise and free of redundancy."
+}

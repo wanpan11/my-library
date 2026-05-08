@@ -1,6 +1,6 @@
 import type { Key, SWRConfiguration } from "swr";
 import type { AnyObject, BaseSwrProps, BaseSwrResult, PagingSwrProps, PagingSwrResult, SimpleKey } from "./interface";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import useSwr from "swr";
 import { DEFAULT_PAGE, SIMPLE_CONF } from "./common";
 
@@ -46,15 +46,26 @@ function useSwrData<TData = any, TParams extends AnyObject = any>(props: PagingS
 function useSwrData<TData = any, TParams extends AnyObject = any>(
   props: BaseSwrProps<TData, TParams> | PagingSwrProps<TData, TParams>
 ): BaseSwrResult<TData> | PagingSwrResult<TData, TParams> {
+  // ── 参数解析 ──
   const { reqKey, req, params, ready = true, simple = false, paging = false, swrConfig } = props;
-
   const defaultPage = "defaultPage" in props ? props.defaultPage || DEFAULT_PAGE : DEFAULT_PAGE;
   const defaultSearch = "defaultSearch" in props ? props.defaultSearch : undefined;
 
+  // ── Refs ──
+  const defaultPageRef = useRef(defaultPage);
+  if (defaultPageRef.current.pageNum !== defaultPage.pageNum
+    || defaultPageRef.current.pageSize !== defaultPage.pageSize) {
+    defaultPageRef.current = defaultPage;
+  }
+
+  // ── 本地状态 ──
   const [pageInfo, setPage] = useState(defaultPage);
   const [searchInfo, setSearch] = useState<Partial<TParams> | undefined>(defaultSearch);
 
-  // 合并参数的 key
+  // ── 派生数据 ──
+  const paramsKey = JSON.stringify(params);
+  const stableParams = useMemo(() => params, [paramsKey]);
+
   const mergeKey: Key = useMemo(() => {
     if (ready === false) {
       return null;
@@ -62,69 +73,67 @@ function useSwrData<TData = any, TParams extends AnyObject = any>(
 
     let mergeParams: any = {};
     if (paging) {
-      mergeParams = { ...pageInfo, ...searchInfo, ...params };
+      mergeParams = { ...pageInfo, ...searchInfo, ...stableParams };
     }
     else {
-      mergeParams = params;
+      mergeParams = stableParams;
     }
 
     return [reqKey, mergeParams];
-  }, [pageInfo, paging, params, ready, reqKey, searchInfo]);
+  }, [pageInfo, paging, stableParams, ready, reqKey, searchInfo]);
 
-  // 合并 SWR 配置，优先级: swrConfig > SIMPLE_CONF > defaults
   const mergeConf = useMemo(() => {
     const defaults: SWRConfiguration = { revalidateOnFocus: false };
     const base = simple ? { ...defaults, ...SIMPLE_CONF } : defaults;
     return { ...base, ...(swrConfig || {}) } as SWRConfiguration;
   }, [simple, swrConfig]);
 
+  // ── 数据请求 ──
   const swrData = useSwr(
     mergeKey,
     useCallback(async (data: [SimpleKey, TParams]) => req(data[1]), [req]),
     mergeConf
   );
 
+  // ── 操作方法 ──
   const onSearch = useCallback(
     (value: Partial<TParams> | undefined) => {
       setSearch(value);
-      setPage(defaultPage);
+      setPage(defaultPageRef.current);
     },
-    [defaultPage]
+    []
   );
 
-  const result = useMemo(() => {
-    const baseResult = {
-      key: mergeKey,
-      get data() {
-        return swrData.data;
-      },
-      get error() {
-        return swrData.error;
-      },
-      get isLoading() {
-        return swrData.isLoading;
-      },
-      get isValidating() {
-        return swrData.isValidating;
-      },
-      refresh: swrData.mutate,
+  // ── 返回值 ──
+  const baseResult = {
+    key: mergeKey,
+    get data() {
+      return swrData.data;
+    },
+    get error() {
+      return swrData.error;
+    },
+    get isLoading() {
+      return swrData.isLoading;
+    },
+    get isValidating() {
+      return swrData.isValidating;
+    },
+    refresh: swrData.mutate,
+  };
+
+  if (paging) {
+    return {
+      ...baseResult,
+      pageInfo,
+      searchInfo,
+      onSearch,
+      setPage,
+      setSearch,
     };
+  }
 
-    if (paging) {
-      return {
-        ...baseResult,
-        pageInfo,
-        searchInfo,
-        onSearch,
-        setPage,
-        setSearch,
-      };
-    }
-
-    return baseResult;
-  }, [mergeKey, onSearch, pageInfo, paging, searchInfo, swrData]);
-
-  return result;
+  return baseResult;
 }
 
 export { useSwrData };
